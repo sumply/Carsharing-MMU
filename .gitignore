@@ -361,3 +361,26 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+###############################################################################
+# Carsharing: локальные файлы инструментов и документов
+###############################################################################
+
+# Временные файлы MS Word / Excel / PowerPoint (~$Имя.docx)
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# DBeaver
+.dbeaver/
+
+# JetBrains Rider / IntelliJ IDEA
+.idea/
+
+# Локальные базы SQLite (прогоны тестов)
+*.db
+*.db-shm
+*.db-wal
+
+# Локальная конфигурация с секретами (правило из issue #1)
+appsettings.Development.json

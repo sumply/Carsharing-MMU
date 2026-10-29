@@ -61,3 +61,22 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Binary formats
+#
+# Документы и изображения не должны проходить через текстовые преобразования:
+# Git не меняет в них переводы строк и не пытается строить построчный diff.
+###############################################################################
+*.docx   binary
+*.doc    binary
+*.xlsx   binary
+*.xls    binary
+*.pptx   binary
+*.pdf    binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.zip    binary
