@@ -12,9 +12,9 @@
 | Платформа | .NET 10 | `TargetFramework` = `net10.0` |
 | Веб-фреймворк | ASP.NET Core Web API | контроллеры, Swagger включён |
 | Документирование API | Swagger / OpenAPI | `Microsoft.AspNetCore.OpenApi` + `Swashbuckle.AspNetCore` |
-| ORM | EF Core 10 + Npgsql | схема БД ведётся миграциями |
+| ORM | EF Core 10 + Npgsql | схема БД создаётся через `EnsureCreated()` |
 | СУБД | PostgreSQL 18 | локально и в `docker-compose.yml` |
-| Тесты | NUnit + Moq, EF Core SQLite | CI не поднимает PostgreSQL |
+| Тесты | NUnit + Moq, EF Core + SQLite (в памяти) | CI не поднимает PostgreSQL |
 | Инструменты | Visual Studio 2026, DBeaver, Git Extensions | см. отчёт об установке ПО |
 | CI | GitHub Actions, `ubuntu-latest` | `.github/workflows/dotnet.yml` |
 
@@ -56,7 +56,6 @@
 
 - Обращение к полям, свойствам и методам экземпляра всегда через `this.` (правило StyleCop SA1101).
 - В конструкторах `this.` обязателен, если имя поля совпадает с именем параметра.
-- В статических членах `this` не используется.
 
 ```csharp
 public sealed class Booking
@@ -132,9 +131,10 @@ ci: add GitHub Actions workflow
 
 - Имена таблиц и столбцов в `snake_case`, таблицы во множественном числе (`cars`, `trips`).
 - Первичный ключ называется `id`, внешний: `<сущность>_id` (например, `car_id`).
-- Изменения схемы выполняются миграциями EF Core (`dotnet ef migrations add <Name>`),
-  файлы миграций коммитятся в репозиторий. Ручные SQL-скрипты допустимы только для разовых
-  операций с данными.
+- Схема БД создаётся один раз при старте приложения через `EnsureCreated()`.
+  Изменение схемы на этапе MVP — пересоздание базы; ручные SQL-скрипты и миграции EF Core
+  не используются.
+- Начальные данные (сиды) добавляются через `HasData` в конфигурациях EF Core.
 - Денежные значения хранятся как `decimal(10,2)`, не `double`.
 - Пароли и строки подключения не хранятся в репозитории (см. раздел 9).
 
@@ -144,8 +144,11 @@ ci: add GitHub Actions workflow
 - Имя теста: `Метод_Сценарий_ОжидаемыйРезультат`, например
   `CalculateTripCost_RegularClient_AppliesDiscount`.
 - Бизнес-логика (тарификация, бронирование, скидки) покрывается тестами.
-- Тесты работают на EF Core SQLite и не требуют запущенного PostgreSQL.
-- Время в тестах подменяется через `TimeProvider`, а не через `Thread.Sleep`.
+- Тесты работают на EF Core с провайдером `Microsoft.EntityFrameworkCore.Sqlite`
+  (база SQLite в памяти), поэтому запущенный PostgreSQL для тестов не требуется.
+- Текущее время в коде берётся из `TimeProvider` (`TimeProvider.System`), а не из
+  `DateTime.Now`; в тестах подставляется управляемая реализация (например, `FakeTimeProvider`),
+  поэтому таймеры брони и сроки проверяются без `Thread.Sleep` и реальных задержек.
 
 ## 8. Документация
 
@@ -167,7 +170,7 @@ ci: add GitHub Actions workflow
 - [ ] Ветка создана от `master` и названа `feature/<номер задачи>`.
 - [ ] `dotnet build` проходит без предупреждений StyleCop.
 - [ ] `dotnet test` зелёный.
-- [ ] Все `public`-члены имеют XML-документацию.
+- [ ] Все `public` и `protected` типы и члены имеют XML-документацию (раздел 3).
 - [ ] Коммиты оформлены по Conventional Commits, в теле указан `Refs #X`.
 - [ ] В описании PR есть `Closes #X` или `Refs #X`, reviewer — MarinaPaley.
 - [ ] В PR нет временных файлов, секретов и закомментированного кода.
